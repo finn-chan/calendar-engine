@@ -64,5 +64,7 @@ jobs:
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
             VCS_REF=${{ github.sha }}
 
-      - name: Image digest
-        run: echo ${{ steps.meta.outputs.tags }}
+      - name: Display built images
+        run: |
+          echo "Built and pushed images:"
+          echo "${{ steps.meta.outputs.tags }}"
