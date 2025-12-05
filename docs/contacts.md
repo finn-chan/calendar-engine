@@ -312,7 +312,7 @@ Set appropriate timezone in config:
 
 ```yaml
 sync:
-  timezone: Asia/Shanghai  # Your local timezone
+  timezone: America/New_York    # Your local timezone
 ```
 
 ### Performance Optimization
@@ -361,14 +361,14 @@ google_api:
     enabled: true
 
 sync:
-  timezone: Asia/Shanghai
+  timezone: America/New_York
   contacts:
     years_past: 10
     years_future: 10
 
 ics:
   contacts:
-    calendar_name: 联系人生日
+    calendar_name: Google Contacts
     emoji:
       birthday: "🎁"
       anniversary: "❤️"

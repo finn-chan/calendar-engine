@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  calendar-engine:
+    image: calendar-engine:latest
+    container_name: calendar-engine
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      # Configuration directory
+      - ./config:/config:ro
+      # Data directory (ICS output and logs)
+      - ./data:/data
+      # Crontab configuration
+      - ./crontab:/etc/cron.d/calendar-engine:ro
+    environment:
+      # Timezone setting
+      - TZ=America/New_York
+      # Configuration file path
+      - CONFIG_PATH=/config/config.yaml
+      # Python unbuffered output
+      - PYTHONUNBUFFERED=1
+
+      # Sync schedule (can be overridden here)
+      # Format: minute hour day month weekday
+      # Examples:
+      #   0 */6 * * *    = Every 6 hours
+      #   0 8,20 * * *   = Daily at 8:00 and 20:00
+      #   */30 * * * *   = Every 30 minutes
+      - CONTACTS_SCHEDULE=0 8 * * *
+      - TASKS_SCHEDULE=0 */6 * * *
+
+    healthcheck:
+      test: [ "CMD", "test", "-f", "/data/tasks.ics", "-o", "-f", "/data/contacts.ics" ]
+      interval: 1h
+      timeout: 10s
+      retries: 3
+      start_period: 2m
+
+    networks:
+      - calendar-net
+
+networks:
+  calendar-net:
+    driver: bridge

@@ -35,7 +35,8 @@ A unified Python application that synchronizes Google services (Contacts, Tasks)
 - ✅ Unified configuration system with service-specific settings
 - ✅ Customizable reminder system with notification times
 - ✅ Full timezone conversion support
-- ✅ Docker containerization
+- ✅ Docker containerization with cron scheduling
+- ✅ Automated builds via GitHub Actions
 - ✅ Command-line interface with service selection
 - ✅ Extensible architecture for adding more Google services
 
@@ -67,9 +68,38 @@ Key configuration sections:
 
 See `config/config.sample.yaml` for detailed configuration options.
 
-### 3. Installation
+### 3. Installation & Deployment
 
-#### Option A: Local Installation
+#### Option A: Docker Compose (Recommended for Production)
+
+Use Docker Compose for automated scheduled synchronization:
+
+```bash
+# Clone the repository
+git clone https://github.com/finn-chan/calendar-engine.git
+cd calendar-engine
+
+# Configure your settings
+cp config/config.sample.yaml config/config.yaml
+# Edit config/config.yaml and add your credentials.json
+
+# Start the container (runs continuously with cron)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# One-time sync
+docker-compose run --rm calendar-engine once
+```
+
+See [Docker Deployment Guide](docs/docker-deployment.md) for detailed instructions on:
+- Customizing sync schedules (cron configuration)
+- Environment variables
+- GitHub Actions for automated builds
+- Monitoring and troubleshooting
+
+#### Option B: Local Installation
 
 ```bash
 # Clone the repository
@@ -83,14 +113,42 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-#### Option B: Docker
+#### Option C: Manual Docker Build
 
 ```bash
 # Build the image
 docker build -t calendar-engine .
+
+# Run once
+docker run -it --rm \
+  -v $(pwd)/config:/config \
+  -v $(pwd)/data:/data \
+  calendar-engine once
 ```
 
 ### 4. Usage
+
+#### Docker Compose (Automated Scheduling)
+
+```bash
+# Start container with cron daemon (runs continuously)
+docker-compose up -d
+
+# View real-time logs
+docker-compose logs -f
+
+# Run sync immediately (one-time)
+docker-compose run --rm calendar-engine once
+
+# Sync only contacts
+docker-compose run --rm calendar-engine once --only contacts
+
+# Check cron schedule
+docker-compose exec calendar-engine cat /etc/cron.d/calendar-engine
+
+# View sync logs
+docker-compose exec calendar-engine tail -f /var/log/cron/contacts.log
+```
 
 #### Local Execution
 
@@ -111,7 +169,9 @@ python -m app --config /path/to/config.yaml
 python -m app --log-level DEBUG
 ```
 
-#### Docker Execution
+**Note:** For automated scheduling with local Python, use system cron (Linux/macOS) or Task Scheduler (Windows).
+
+#### Manual Docker Execution (Without Compose)
 
 **First Run (Authorization Required):**
 
@@ -119,10 +179,10 @@ python -m app --log-level DEBUG
 docker run -it --rm \
   -v $(pwd)/config:/config \
   -v $(pwd)/data:/data \
-  calendar-engine
+  calendar-engine once
 ```
 
-On first run, a browser will open to complete OAuth2 authorization. After authorization, token files will be generated.
+On first run, follow the authorization URL in the output to complete OAuth2 authorization. Token files will be saved to `data/`.
 
 **Subsequent Runs:**
 
@@ -130,7 +190,7 @@ On first run, a browser will open to complete OAuth2 authorization. After author
 docker run --rm \
   -v $(pwd)/config:/config \
   -v $(pwd)/data:/data \
-  calendar-engine
+  calendar-engine once
 ```
 
 **Sync only specific service:**
@@ -139,7 +199,7 @@ docker run --rm \
 docker run --rm \
   -v $(pwd)/config:/config \
   -v $(pwd)/data:/data \
-  calendar-engine --only contacts
+  calendar-engine once --only contacts
 ```
 
 ### 5. Calendar Subscription
@@ -229,6 +289,9 @@ Tasks with these patterns in title or notes are treated as recurring:
 
 ```
 calendar-engine/
+├── .github/
+│   └── workflows/
+│       └── docker-build.yml  # GitHub Actions CI/CD
 ├── app/
 │   ├── __init__.py           # Package initialization
 │   ├── __main__.py           # Entry point for module execution
@@ -254,7 +317,12 @@ calendar-engine/
 │   └── *.json                # OAuth tokens (gitignored)
 ├── tests/                    # Test suite
 ├── docs/                     # Documentation
-├── Dockerfile                # Docker configuration
+│   ├── docker-deployment.md  # Docker deployment guide
+│   └── ...
+├── Dockerfile                # Docker image configuration
+├── docker-compose.yml        # Docker Compose configuration
+├── docker-entrypoint.sh      # Container startup script
+├── crontab                   # Cron schedule configuration
 ├── requirements.txt          # Python dependencies
 └── README.md                 # This file
 ```
@@ -302,8 +370,50 @@ mypy app/
 On Linux, ensure proper permissions for mounted volumes:
 
 ```bash
-chmod 777 config data
+chmod -R 755 config data
 ```
+
+### Cron Not Running
+Check if cron daemon is running:
+
+```bash
+docker-compose exec calendar-engine ps aux | grep cron
+docker-compose restart
+```
+
+For more troubleshooting, see [Docker Deployment Guide](docs/docker-deployment.md).
+
+## Deployment Options
+
+### Option 1: GitHub Container Registry (Recommended)
+
+Push to GitHub and use automated builds:
+
+```yaml
+services:
+  calendar-engine:
+    image: ghcr.io/<username>/calendar-engine:latest
+```
+
+GitHub Actions automatically builds and publishes images on push to main branch.
+
+### Option 2: Self-Hosted
+
+Build and run locally with Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+### Option 3: Cloud Hosting
+
+Deploy to any cloud provider supporting Docker:
+- AWS ECS
+- Google Cloud Run
+- Azure Container Instances
+- DigitalOcean App Platform
+
+See [Docker Deployment Guide](docs/docker-deployment.md) for detailed instructions.
 
 ## Contributing
 
@@ -328,6 +438,7 @@ Special thanks to all contributors of the original projects.
 
 ## Related Documentation
 
+- [Docker Deployment Guide](docs/docker-deployment.md)
 - [Configuration Guide](docs/README.md)
 - [Contacts Features](docs/contacts.md)
 - [Tasks Features](docs/tasks.md)
