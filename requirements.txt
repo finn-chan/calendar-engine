@@ -13,7 +13,7 @@ pytz>=2023.3
 PyYAML>=6.0
 
 # Contacts-specific: Lunar calendar conversion
-lunarcalendar>=3.0.0
+lunarcalendar>=0.0.9
 
 # Development dependencies (optional)
 pytest>=7.4.0
