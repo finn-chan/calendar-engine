@@ -1,0 +1,46 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+dist
+build
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov/
+
+# Documentation
+docs/_build
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project-specific (keep samples only)
+config/config.yaml
+config/credentials.json
+data/*.json
+data/*.ics
+data/*.log

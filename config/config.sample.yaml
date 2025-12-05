@@ -1,0 +1,101 @@
+# Calendar Engine Configuration
+# This is a sample configuration file. Copy it to config.yaml and customize as needed.
+
+google_api:
+  credentials_file: /config/credentials.json
+  
+  # Google Contacts API configuration
+  contacts:
+    enabled: true
+    token_file: /data/token_contacts.json
+    scopes:
+      - https://www.googleapis.com/auth/contacts.readonly
+  
+  # Google Tasks API configuration
+  tasks:
+    enabled: true
+    token_file: /data/token_tasks.json
+    scopes:
+      - https://www.googleapis.com/auth/tasks.readonly
+
+sync:
+  timezone: America/New_York   # Timezone for all calendar events
+  
+  # Google Contacts synchronization settings
+  contacts:
+    years_past: 5              # Number of past years to generate birthday/anniversary events
+    years_future: 5            # Number of future years to generate birthday/anniversary events
+  
+  # Google Tasks synchronization settings
+  tasks:
+    include_completed: true              # Include completed tasks in calendar
+    include_without_due: true            # Include tasks without due dates
+    overdue_show_today: true             # Show overdue incomplete tasks as today's reminders
+    repeat_past_instances_days: 30       # Days to look back for recurring task instances
+    repeat_future_instances: 10          # Number of future instances for recurring tasks
+
+ics:
+  # Google Contacts calendar output configuration
+  contacts:
+    enabled: true
+    output_path: /data/contacts.ics
+    calendar_name: Google Contacts
+    add_empty_line_between_events: true
+    
+    # Event type markers (labels in contact events to identify event types)
+    event_markers:
+      gregorian_birthday: "gregorian-birthday"  # Default marker for birthdays field
+      lunar_birthday: "lunar-birthday"          # Marker in custom event type field
+      anniversary: "anniversary"                # Marker in custom event type field
+    
+    # Emoji for different event types
+    emoji:
+      birthday: "🎂"
+      anniversary: "💝"
+    
+    # Reminder settings for different event types
+    # Time format: "HH:MM" for same-day reminders
+    # For multi-day advance reminders: "-N HH:MM" (N days before at specified time)
+    # Examples: "09:00" (same day at 9 AM), "-1 09:00" (1 day before at 9 AM)
+    reminders:
+      birthday:
+        - "09:00"
+        - "19:00"
+      lunar_birthday:
+        - "09:00"
+        - "19:00"
+      anniversary:
+        - "09:00"
+        - "19:00"
+  
+  # Google Tasks calendar output configuration
+  tasks:
+    enabled: true
+    output_path: /data/tasks.ics
+    calendar_name: Google Tasks
+    add_tasklist_to_summary: false       # Add task list name to event title (shown in description instead)
+    add_status_to_description: true      # Add task status information to description
+    add_empty_line_between_events: true
+    timed_event_duration_hours: 1        # Duration for timed events (currently unused, all tasks are all-day)
+    
+    # Emoji for task status
+    emoji:
+      completed: "✔️"                    # Prefix for completed tasks
+      incomplete: "⭕️"                   # Prefix for incomplete tasks
+      overdue: "⚠️"                      # Prefix for overdue tasks
+    
+    # Reminder settings (time format: "HH:MM" for same-day reminders)
+    # Note: Google Tasks API only provides dates, not times, so all tasks are all-day events
+    reminders:
+      - "09:00"
+      - "19:00"
+  
+  # Common calendar settings
+  common:
+    apple_language: en                   # Language code for Apple Calendar compatibility
+    apple_region: US                     # Region code for Apple Calendar compatibility
+    summary_language: en_US              # Language parameter for event summaries
+
+logging:
+  level: INFO                            # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: /data/app.log                    # Log file path (null for console only)
