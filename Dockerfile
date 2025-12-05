@@ -20,7 +20,7 @@ RUN ln -sf /usr/bin/python3 /usr/bin/python && \
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --break-system-packages -r requirements.txt
 
 # Copy application code
 COPY app/ ./app/
