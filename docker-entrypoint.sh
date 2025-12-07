@@ -8,8 +8,8 @@ echo "Time: $(date)"
 echo "Timezone: ${TZ:-UTC}"
 echo "=========================================="
 
-# Create log directory if not exists
-mkdir -p /var/log/cron
+# Create necessary directories
+mkdir -p /config /data /logs /var/log/cron
 
 # Set proper permissions for crontab file
 if [ -f /etc/cron.d/calendar-engine ]; then
@@ -23,12 +23,12 @@ if [ -f /etc/cron.d/calendar-engine ]; then
 
 EOF
         if [ -n "$CONTACTS_SCHEDULE" ]; then
-            echo "${CONTACTS_SCHEDULE} root cd /app && python -m app --only contacts >> /var/log/cron/contacts.log 2>&1" >> /etc/cron.d/calendar-engine
+            echo "${CONTACTS_SCHEDULE} root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1" >> /etc/cron.d/calendar-engine
             echo "  Contacts schedule: ${CONTACTS_SCHEDULE}"
         fi
         
         if [ -n "$TASKS_SCHEDULE" ]; then
-            echo "${TASKS_SCHEDULE} root cd /app && python -m app --only tasks >> /var/log/cron/tasks.log 2>&1" >> /etc/cron.d/calendar-engine
+            echo "${TASKS_SCHEDULE} root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1" >> /etc/cron.d/calendar-engine
             echo "  Tasks schedule: ${TASKS_SCHEDULE}"
         fi
         
@@ -42,9 +42,9 @@ else
     cat > /etc/cron.d/calendar-engine << 'EOF'
 # Calendar Engine Default Cron Schedule
 # Contacts: daily at 8:00 AM
-0 8 * * * root cd /app && python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
+0 8 * * * root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
 # Tasks: every 6 hours
-0 */6 * * * root cd /app && python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
+0 */6 * * * root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
 
 EOF
     chmod 0644 /etc/cron.d/calendar-engine
@@ -74,6 +74,15 @@ fi
 # Start cron daemon
 echo "Starting cron daemon..."
 cron
+
+# Verify cron is running
+sleep 2
+if ps aux | grep -q '[c]ron'; then
+    echo "Cron daemon started successfully"
+else
+    echo "ERROR: Cron daemon failed to start"
+    exit 1
+fi
 
 # Keep container running and tail logs
 echo "Container is ready. Tailing log files..."

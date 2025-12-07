@@ -31,7 +31,7 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create necessary directories
-RUN mkdir -p /config /data /var/log/cron
+RUN mkdir -p /config /data /logs /var/log/cron
 
 # Set environment variables
 ENV CONFIG_PATH=/config/config.yaml

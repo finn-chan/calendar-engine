@@ -12,13 +12,24 @@ Calendar Engine is packaged as a Docker image based on Debian 12 (slim) with bui
 
 ```bash
 calendar-engine/
-├── config/
-│   ├── config.yaml           # Your configuration
-│   └── credentials.json      # Google API credentials
-├── data/                     # ICS output and logs (auto-created)
+├── config/                   # Private: configuration and credentials
+│   ├── config.yaml           # Application configuration
+│   ├── credentials.json      # Google API credentials (OAuth client)
+│   ├── token_contacts.json   # Google Contacts token (auto-generated)
+│   └── token_tasks.json      # Google Tasks token (auto-generated)
+├── data/                     # Public: ICS calendar files
+│   ├── contacts.ics          # Generated contacts calendar (auto-created)
+│   └── tasks.ics             # Generated tasks calendar (auto-created)
+├── logs/                     # Private: application logs
+│   └── app.log               # Application log file
 ├── crontab                   # Cron schedule (optional override)
 └── docker-compose.yml        # Docker Compose configuration
 ```
+
+**Directory Security:**
+- 🔒 **`config/`** - Keep private, contains credentials and tokens
+- 🌐 **`data/`** - Safe to expose via web server (only ICS files)
+- 🔒 **`logs/`** - Keep private, contains application logs
 
 ### 2. Configure Schedule
 
@@ -81,9 +92,36 @@ environment:
 
 ```yaml
 volumes:
-  - ./config:/config:ro           # Configuration (read-only)
-  - ./data:/data                  # ICS output and logs (read-write)
-  - ./crontab:/etc/cron.d/calendar-engine:ro  # Cron schedule (optional)
+  # Configuration directory (private: credentials, tokens, config)
+  - ./config:/config
+  # Data directory (public: ICS calendar files)
+  - ./data:/data
+  # Logs directory (private: application logs)
+  - ./logs:/logs
+  # Crontab configuration (optional)
+  - ./crontab:/etc/cron.d/calendar-engine:ro
+```
+
+**Security Best Practices:**
+
+1. **Keep `config/` directory private** - Contains sensitive credentials and tokens
+2. **`config/` needs write access** - For token file creation during OAuth
+3. **Expose ICS files carefully** - Use nginx location filtering or separate mount:
+
+```yaml
+# Option 1: Filter in nginx (recommended)
+volumes:
+  - ./data:/usr/share/nginx/html/calendar:ro
+
+# Nginx config to only serve .ics files
+location /calendar/ {
+    location ~ \.ics$ { allow all; }
+    location ~ . { deny all; }
+}
+
+# Or mount entire data directory (nginx filters to .ics only via location directive)
+volumes:
+  - ./data:/usr/share/nginx/html/calendar:ro
 ```
 
 ## Building from Source
@@ -176,8 +214,12 @@ docker-compose exec calendar-engine tail -f /var/log/cron/full-sync.log
 ### Health Check
 
 ```bash
-# Manual health check
+# Manual health check - verify ICS files are generated
 docker-compose exec calendar-engine ls -lh /data/*.ics
+
+# Check all directories
+docker-compose exec calendar-engine ls -lh /config/
+docker-compose exec calendar-engine ls -lh /data/
 ```
 
 ## Troubleshooting
@@ -195,8 +237,11 @@ docker-compose restart
 ### Permission Issues
 
 ```bash
-# Ensure proper permissions for config and data directories
+# Ensure proper permissions for directories
 chmod -R 755 config data
+
+# Config directory needs write access for token files
+chmod 755 config
 ```
 
 ### Timezone Issues
@@ -267,12 +312,14 @@ services:
 
 ### Serving ICS Files via HTTP
 
-Use nginx or another web server to serve generated ICS files:
+**Method 1: Nginx with location filtering (Recommended)**
 
 ```yaml
 services:
   calendar-engine:
-    # ... existing configuration ...
+    volumes:
+      - ./config:/config
+      - ./data:/data
   
   nginx:
     image: nginx:alpine
@@ -282,20 +329,88 @@ services:
       - "8080:80"
 ```
 
-Access ICS files at: `http://your-server:8080/calendar/contacts.ics`
+Nginx configuration for security (only serve .ics files):
+
+```nginx
+server {
+    listen 80;
+    server_name calendar.yourdomain.com;
+
+    location /calendar/ {
+        alias /usr/share/nginx/html/calendar/;
+        autoindex off;
+        
+        # Only allow .ics files
+        location ~ \.ics$ {
+            add_header Access-Control-Allow-Origin *;
+            add_header Cache-Control "no-cache, must-revalidate";
+            types {
+                text/calendar ics;
+            }
+        }
+        
+        # Deny all other files (including .log, .json)
+        location ~ . {
+            deny all;
+            return 403;
+        }
+    }
+}
+```
+
+**Method 2: Individual file mounts (Maximum security)**
+
+```yaml
+nginx:
+  image: nginx:alpine
+  volumes:
+    # Only mount specific ICS files, not the whole data directory
+    - ./data/contacts.ics:/usr/share/nginx/html/calendar/contacts.ics:ro
+    - ./data/tasks.ics:/usr/share/nginx/html/calendar/tasks.ics:ro
+  ports:
+    - "8080:80"
+```
+      - "8080:80"
+```
+
+Access ICS files at: 
+- `http://your-server:8080/calendar/contacts.ics`
+- `http://your-server:8080/calendar/tasks.ics`
 
 ## Migration from Local Python
 
 If migrating from local Python installation:
 
-1. Copy your existing `config/config.yaml` and `config/credentials.json`
-2. Copy token files from local to `./data/token_*.json`
-3. Update file paths in `config.yaml` to use container paths:
-   - `./config/` → `/config/`
-   - `./data/` → `/data/`
-4. Start with Docker Compose
+1. **Prepare directories:**
+   ```bash
+   mkdir -p calendar-engine/{config,data}
+   ```
 
-**Note:** The provided `docker-compose.yml` uses local paths (`./config/`, `./data/`) which are automatically mapped to container paths.
+2. **Copy configuration files:**
+   ```bash
+   cp config/config.yaml calendar-engine/config/
+   cp config/credentials.json calendar-engine/config/
+   ```
+
+3. **Copy token files** (if already authorized):
+   ```bash
+   # Tokens now go in config/ directory for better security
+   cp data/token_*.json calendar-engine/config/
+   ```
+
+4. **Update config.yaml paths:**
+   - Token files: `./data/token_*.json` → `/config/token_*.json`
+   - ICS output: Keep as `/data/*.ics`
+   - Log file: `/data/app.log` → `/logs/app.log`
+
+5. **Start with Docker Compose:**
+   ```bash
+   docker-compose up -d
+   ```
+
+**Directory Mapping:**
+- Local `./config/` → Container `/config/` (credentials, tokens, config)
+- Local `./data/` → Container `/data/` (ICS files, logs)
 
 ## Resources
 

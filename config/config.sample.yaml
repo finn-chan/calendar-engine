@@ -7,14 +7,14 @@ google_api:
   # Google Contacts API configuration
   contacts:
     enabled: true
-    token_file: /data/token_contacts.json
+    token_file: /config/token_contacts.json
     scopes:
       - https://www.googleapis.com/auth/contacts.readonly
   
   # Google Tasks API configuration
   tasks:
     enabled: true
-    token_file: /data/token_tasks.json
+    token_file: /config/token_tasks.json
     scopes:
       - https://www.googleapis.com/auth/tasks.readonly
 
@@ -98,4 +98,4 @@ ics:
 
 logging:
   level: INFO                            # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  file: /data/app.log                    # Log file path (null for console only)
+  file: /logs/app.log                    # Log file path (null for console only)

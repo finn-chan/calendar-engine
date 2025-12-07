@@ -1,19 +1,16 @@
 # Data Directory
 
-This directory stores output files and authentication tokens.
+This directory stores generated ICS calendar files.
 
 ## Files
 
 ### Output Files
 - `contacts.ics`: Calendar events from Google Contacts (birthdays, anniversaries)
 - `tasks.ics`: Calendar events from Google Tasks
-- `app.log`: Application log file (if logging is enabled)
 
-### Token Files
-- `token_contacts.json`: OAuth token for Google Contacts API
-- `token_tasks.json`: OAuth token for Google Tasks API
-
-These tokens are automatically created after first authentication and refreshed as needed.
+**Note:** Authentication tokens and application logs are now stored in separate directories:
+- Tokens: `config/token_*.json` (OAuth tokens)
+- Logs: `logs/app.log` (application logs)
 
 ## Calendar Subscription
 
@@ -38,16 +35,18 @@ Then subscribe to: `http://localhost:8000/contacts.ics`
 When using Docker, this directory is mounted as a volume for persistence:
 
 ```bash
-docker run -v $(pwd)/data:/data calendar-engine
+docker run -v $(pwd)/config:/config -v $(pwd)/data:/data -v $(pwd)/logs:/logs calendar-engine
 ```
 
 ## Security
 
-⚠️ Token files contain sensitive authentication data. Protect them appropriately:
-- Set restrictive file permissions (e.g., `chmod 600 token_*.json`)
-- Never commit to version control
-- Back up securely if needed
+This directory contains only generated ICS calendar files, which are safe to expose via HTTP for calendar subscription.
+
+**Sensitive files are stored elsewhere:**
+- 🔒 **Credentials & Tokens**: `config/` directory (keep private)
+- 🔒 **Application Logs**: `logs/` directory (keep private)
+- 🌐 **ICS Files**: `data/` directory (safe to serve via HTTP)
 
 ## Cleanup
 
-ICS files are regenerated on each sync, so old files are automatically replaced. Log files may grow over time and can be rotated or deleted as needed.
+ICS files are regenerated on each sync, so old files are automatically replaced.

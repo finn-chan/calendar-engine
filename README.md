@@ -311,10 +311,12 @@ calendar-engine/
 ├── config/
 │   ├── config.sample.yaml    # Sample configuration
 │   ├── config.yaml           # User configuration (gitignored)
-│   └── credentials.json      # Google API credentials (gitignored)
-├── data/                     # Output directory
-│   ├── *.ics                 # Generated calendars
-│   └── *.json                # OAuth tokens (gitignored)
+│   ├── credentials.json      # Google API credentials (gitignored)
+│   └── token_*.json          # OAuth tokens (gitignored, auto-generated)
+├── data/                     # Data directory
+│   └── *.ics                 # Generated calendar files (gitignored)
+├── logs/                     # Logs directory
+│   └── app.log               # Application log file (gitignored)
 ├── tests/                    # Test suite
 ├── docs/                     # Documentation
 │   ├── docker-deployment.md  # Docker deployment guide

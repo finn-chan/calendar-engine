@@ -10,9 +10,11 @@ services:
     restart: unless-stopped
     volumes:
       # Configuration directory
-      - ./config:/config:ro
-      # Data directory (ICS output and logs)
+      - ./config:/config
+      # Data directory
       - ./data:/data
+      # Logs directory
+      - ./logs:/logs
       # Crontab configuration
       - ./crontab:/etc/cron.d/calendar-engine:ro
     environment:

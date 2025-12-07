@@ -122,6 +122,6 @@ desktop.ini
 # Project-specific
 config/config.yaml
 config/credentials.json
-data/*.json
+config/*.json
 data/*.ics
-data/*.log
+logs/*.log

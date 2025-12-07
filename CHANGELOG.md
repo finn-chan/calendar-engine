@@ -5,6 +5,64 @@ All notable changes to Calendar Engine will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-12-07
+
+### Added
+- **Separated Log Directory**: Created dedicated `/logs` directory for application logs
+  - Moved `app.log` from `/data` to `/logs` for better security
+  - Added `logs/README.md` with logging documentation
+  - Updated `.gitignore` to ignore `logs/*.log`
+- **Enhanced Directory Structure**: Implemented three-directory separation
+  - `/config` - Private: credentials, tokens, configuration files
+  - `/data` - Public: ICS calendar files only (safe for HTTP exposure)
+  - `/logs` - Private: application logs and debug information
+- **Improved Documentation**: Updated all documentation to reflect new directory structure
+  - Updated `README.md` project structure section
+  - Updated `docs/docker-deployment.md` with security best practices
+  - Updated `data/README.md` to clarify contents
+  - Updated `QUICKSTART.md` with correct log paths
+  - Fixed `config/README.md` token file paths
+
+### Changed
+- **Token File Location**: Moved OAuth tokens from `/data` to `/config` directory
+  - Updated `config.sample.yaml`: token paths changed to `/config/token_*.json`
+  - Better security isolation: tokens no longer in same directory as public ICS files
+- **Logging Configuration**: Updated log file path in sample configuration
+  - Changed from `/data/app.log` to `/logs/app.log`
+- **Docker Configuration**: Enhanced Docker setup for better directory management
+  - `Dockerfile`: Added `/logs` directory creation
+  - `docker-compose.yml`: Added `./logs:/logs` volume mount
+  - `docker-entrypoint.sh`: Creates all necessary directories on startup
+
+### Fixed
+- **Cron Configuration**: Added missing `CONFIG_PATH` environment variable to static `crontab` file
+  - All cron jobs now explicitly set `CONFIG_PATH=/config/config.yaml`
+  - Ensures configuration file is found during scheduled execution
+  - Fixes issue where cron jobs would fail to locate config after initial run
+- **Directory Creation**: Ensured all required directories are created on container startup
+  - `docker-entrypoint.sh` now creates `/config`, `/data`, `/logs`, `/var/log/cron`
+  - Prevents "directory not found" errors
+
+### Security
+- **Improved Security Model**: Clear separation of public and private files
+  - Public exposure via HTTP: Only `/data` directory (ICS files)
+  - Private storage: `/config` (credentials/tokens) and `/logs` (application logs)
+  - Documented security best practices in deployment guide
+- **Nginx Configuration Examples**: Added location filtering examples
+  - Serve only `.ics` files from `/data` directory
+  - Explicitly deny access to other file types
+
+### Documentation
+- Created comprehensive `logs/README.md` with:
+  - Log viewing commands for Docker and local installations
+  - Log rotation configuration examples
+  - Security warnings about log content
+- Updated deployment guide with:
+  - Three-directory structure explanation
+  - Security considerations for each directory
+  - Nginx configuration for safe ICS file serving
+  - Migration instructions with path updates
+
 ## [1.0.0] - 2025-12-05
 
 ### Added - Project Merger

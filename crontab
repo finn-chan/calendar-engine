@@ -10,12 +10,12 @@
 #   0 8,20 * * *   = Daily at 8:00 AM and 8:00 PM
 
 # Google Contacts synchronization (daily at 8:00 AM)
-0 8 * * * root cd /app && python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
+0 8 * * * root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
 
 # Google Tasks synchronization (every 6 hours)
-0 */6 * * * root cd /app && python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
+0 */6 * * * root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
 
 # Full synchronization (both services, weekly on Sunday at 2:00 AM)
-0 2 * * 0 root cd /app && python -m app >> /var/log/cron/full-sync.log 2>&1
+0 2 * * 0 root cd /app && CONFIG_PATH=/config/config.yaml python -m app >> /var/log/cron/full-sync.log 2>&1
 
 # Keep an empty line at the end of the file

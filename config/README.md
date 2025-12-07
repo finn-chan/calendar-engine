@@ -28,11 +28,13 @@ Key configuration sections:
 - **logging**: Logging level and output file
 
 ### Token Files
-After first OAuth authentication, token files are automatically created:
-- `../data/token_contacts.json`: Contacts API token
-- `../data/token_tasks.json`: Tasks API token
+After first OAuth authentication, token files are automatically created in this directory:
+- `token_contacts.json`: Contacts API token
+- `token_tasks.json`: Tasks API token
 
 These files store refresh tokens for automatic authentication renewal.
+
+**Note:** Token files are now stored in the `config/` directory (not `data/`) for better security separation.
 
 ## Configuration Tips
 

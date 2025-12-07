@@ -199,7 +199,7 @@ python -m app
 ## Support
 
 - **Documentation**: See `docs/` directory
-- **Issues**: Check logs in `data/app.log`
+- **Issues**: Check logs in `logs/app.log`
 - **Configuration**: Review `config/config.sample.yaml`
 
 ## Contributing
