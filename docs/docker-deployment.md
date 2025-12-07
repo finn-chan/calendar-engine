@@ -22,7 +22,6 @@ calendar-engine/
 │   └── tasks.ics             # Generated tasks calendar (auto-created)
 ├── logs/                     # Private: application logs
 │   └── app.log               # Application log file
-├── crontab                   # Cron schedule (optional override)
 └── docker-compose.yml        # Docker Compose configuration
 ```
 
@@ -33,26 +32,26 @@ calendar-engine/
 
 ### 2. Configure Schedule
 
-Edit `crontab` to customize sync frequency for each service:
+Configure sync frequency by editing environment variables in `docker-compose.yml`:
 
-```cron
-# Contacts: daily at 8:00 AM
-0 8 * * * root cd /app && python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
-
-# Tasks: every 6 hours
-0 */6 * * * root cd /app && python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
-
-# Full sync: weekly on Sunday at 2:00 AM
-0 2 * * 0 root cd /app && python -m app >> /var/log/cron/full-sync.log 2>&1
+```yaml
+environment:
+  - CONTACTS_SCHEDULE=0 8 * * *      # Contacts: daily at 8:00 AM
+  - TASKS_SCHEDULE=0 */6 * * *       # Tasks: every 6 hours
 ```
 
-**Cron Format:** `minute hour day month weekday command`
+**Cron Format:** `minute hour day month weekday`
 
-**Examples:**
+**Common Examples:**
 - `0 8 * * *` - Daily at 8:00 AM
-- `0 */6 * * *` - Every 6 hours
+- `0 */6 * * *` - Every 6 hours (0:00, 6:00, 12:00, 18:00)
 - `*/30 * * * *` - Every 30 minutes
 - `0 8,20 * * *` - Daily at 8:00 AM and 8:00 PM
+- `0 2 * * 0` - Weekly on Sunday at 2:00 AM
+
+**Default Values (if not specified):**
+- Contacts: `0 8 * * *` (daily at 8:00 AM)
+- Tasks: `0 */6 * * *` (every 6 hours)
 
 ### 3. Deploy with Docker Compose
 
@@ -63,7 +62,7 @@ docker-compose up -d
 # View logs
 docker-compose logs -f
 
-# Check cron schedule
+# Check configured cron schedule
 docker-compose exec calendar-engine cat /etc/cron.d/calendar-engine
 
 # View sync logs
@@ -78,24 +77,24 @@ docker-compose down
 
 ### Environment Variables
 
-You can configure cron schedules and behavior using environment variables in `docker-compose.yml`:
+Configure schedules and behavior in `docker-compose.yml`:
 
 ```yaml
 environment:
-  - TZ=America/New_York                 # Timezone
-  - CONFIG_PATH=/config/config.yaml     # Config file path (auto-set)
-  - CONTACTS_SCHEDULE=0 8 * * *         # Contacts sync schedule
-  - TASKS_SCHEDULE=0 */6 * * *          # Tasks sync schedule
-  - SYNC_ON_START=true                  # Run sync on container start (default: true)
+  # Timezone setting
+  - TZ=America/New_York
+  
+  # Sync schedules (cron format: minute hour day month weekday)
+  - CONTACTS_SCHEDULE=0 8 * * *      # Daily at 8:00 AM (default)
+  - TASKS_SCHEDULE=0 */6 * * *       # Every 6 hours (default)
+  
+  # Initial sync on container start
+  - SYNC_ON_START=true               # true (default) or false
 ```
 
-**Recommended approach:** Use environment variables in `docker-compose.yml` for schedule configuration. This is simpler than managing a separate crontab file.
+**Available Variables:**
 
-**SYNC_ON_START behavior:**
-- `true` (default): Runs a full sync when container starts
-- `false`: Only runs scheduled syncs via cron
-- Useful for immediate results on first deployment
-
+| Variable | Description | Default | Example |
 ### Volume Mounts
 
 ```yaml
@@ -106,8 +105,15 @@ volumes:
   - ./data:/data
   # Logs directory (private: application logs)
   - ./logs:/logs
-  # Crontab configuration (optional)
-  - ./crontab:/etc/cron.d/calendar-engine:ro
+```
+```yaml
+volumes:
+  # Configuration directory (private: credentials, tokens, config)
+  - ./config:/config
+  # Data directory (public: ICS calendar files)
+  - ./data:/data
+  # Logs directory (private: application logs)
+  - ./logs:/logs
 ```
 
 **Security Best Practices:**
@@ -238,7 +244,14 @@ docker-compose exec calendar-engine ls -lh /data/
 # Check if cron daemon is running
 docker-compose exec calendar-engine ps aux | grep cron
 
-# Restart container
+# Verify cron configuration
+docker-compose exec calendar-engine cat /etc/cron.d/calendar-engine
+
+# Check cron logs
+docker-compose exec calendar-engine tail -f /var/log/cron/contacts.log
+docker-compose exec calendar-engine tail -f /var/log/cron/tasks.log
+
+# Restart container to regenerate cron config from environment variables
 docker-compose restart
 ```
 
@@ -268,22 +281,30 @@ Update `TZ` environment variable in `docker-compose.yml` if needed.
 Delete token files and re-authenticate:
 
 ```bash
-rm data/token_*.json
+rm config/token_*.json
 docker-compose run --rm calendar-engine once
 ```
 
 ## Advanced Configuration
 
-### Custom Cron Schedule Per Service
+### Modifying Sync Schedules
 
-Create separate cron entries for fine-grained control:
+To change sync frequency:
 
-```cron
-# Contacts: every Monday at 8:00 AM
-0 8 * * 1 root cd /app && python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
+```bash
+# 1. Edit docker-compose.yml
+vim docker-compose.yml
 
-# Tasks: every 4 hours during work hours (8 AM - 8 PM)
-0 8,12,16,20 * * * root cd /app && python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
+# Example: Change to hourly syncs
+environment:
+  - CONTACTS_SCHEDULE=0 * * * *    # Every hour
+  - TASKS_SCHEDULE=0 * * * *       # Every hour
+
+# 2. Restart container to apply new schedule
+docker-compose up -d
+
+# 3. Verify new schedule
+docker-compose exec calendar-engine cat /etc/cron.d/calendar-engine
 ```
 
 ### Log Rotation

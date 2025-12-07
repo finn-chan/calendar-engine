@@ -15,8 +15,6 @@ services:
       - ./data:/data
       # Logs directory
       - ./logs:/logs
-      # Crontab configuration
-      - ./crontab:/etc/cron.d/calendar-engine:ro
     environment:
       # Timezone setting
       - TZ=America/New_York
@@ -29,13 +27,13 @@ services:
       # Set to false to disable initial sync
       # - SYNC_ON_START=false
 
-      # Sync schedule (can be overridden here)
+      # Sync schedules - Configure your sync frequency here
       # Format: minute hour day month weekday
       # Examples:
       #   0 */6 * * *    = Every 6 hours
       #   0 8,20 * * *   = Daily at 8:00 and 20:00
       #   */30 * * * *   = Every 30 minutes
-      # Default schedules if not specified:
+      # If not specified, defaults are:
       #   Contacts: 0 8 * * * (daily at 8:00 AM)
       #   Tasks: 0 */6 * * * (every 6 hours)
       - CONTACTS_SCHEDULE=0 8 * * *

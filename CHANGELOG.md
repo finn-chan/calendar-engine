@@ -5,6 +5,32 @@ All notable changes to Calendar Engine will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-12-08
+
+### Changed
+- **Simplified Schedule Configuration**: Removed static crontab file requirement
+  - Cron schedules are now **automatically generated from environment variables only**
+  - Users only need to configure `CONTACTS_SCHEDULE` and `TASKS_SCHEDULE` in `docker-compose.yml`
+  - No need to create or manage `crontab` file manually
+  - Container regenerates crontab on every restart based on environment variables
+- **Updated Documentation**: All docs now reflect environment-variable-only configuration
+  - Removed references to manual crontab file creation
+  - Simplified deployment instructions
+  - Added clear examples of schedule configuration in docker-compose.yml
+
+### Removed
+- **Static crontab File**: Removed `crontab` file from repository
+  - No longer needed as schedules are fully managed via environment variables
+  - Eliminates confusion about which configuration takes precedence
+- **Crontab Volume Mount**: Removed from `docker-compose.yml`
+  - Cleaner configuration with fewer moving parts
+
+### Fixed
+- **Cron Schedule Application**: Fixed issue where environment variables weren't being applied
+  - Container now always generates fresh crontab from `CONTACTS_SCHEDULE` and `TASKS_SCHEDULE`
+  - Eliminates stale configuration from previous runs
+  - Ensures user's schedule preferences are always respected
+
 ## [1.1.0] - 2025-12-07
 
 ### Added

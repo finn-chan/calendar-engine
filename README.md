@@ -83,6 +83,9 @@ cd calendar-engine
 cp config/config.sample.yaml config/config.yaml
 # Edit config/config.yaml and add your credentials.json
 
+# Configure sync schedules in docker-compose.yml
+# Edit environment variables: CONTACTS_SCHEDULE and TASKS_SCHEDULE
+
 # Start the container (runs continuously with cron)
 docker-compose up -d
 
@@ -94,8 +97,8 @@ docker-compose run --rm calendar-engine once
 ```
 
 See [Docker Deployment Guide](docs/docker-deployment.md) for detailed instructions on:
-- Customizing sync schedules (cron configuration)
-- Environment variables
+- Configuring sync schedules via environment variables
+- Environment variable reference
 - GitHub Actions for automated builds
 - Monitoring and troubleshooting
 
@@ -324,7 +327,6 @@ calendar-engine/
 ├── Dockerfile                # Docker image configuration
 ├── docker-compose.yml        # Docker Compose configuration
 ├── docker-entrypoint.sh      # Container startup script
-├── crontab                   # Cron schedule configuration
 ├── requirements.txt          # Python dependencies
 └── README.md                 # This file
 ```

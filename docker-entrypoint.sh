@@ -11,47 +11,31 @@ echo "=========================================="
 # Create necessary directories
 mkdir -p /config /data /logs /var/log/cron
 
-# Set proper permissions for crontab file
-if [ -f /etc/cron.d/calendar-engine ]; then
-    echo "Installing crontab from /etc/cron.d/calendar-engine"
-    chmod 0644 /etc/cron.d/calendar-engine
-    # Apply environment variables to crontab if provided
-    if [ -n "$CONTACTS_SCHEDULE" ] || [ -n "$TASKS_SCHEDULE" ]; then
-        echo "Applying custom schedule from environment variables"
-        cat > /etc/cron.d/calendar-engine << EOF
-# Calendar Engine Cron Schedule (Generated from environment variables)
+# Always generate fresh crontab from environment variables
+echo "Configuring cron schedules from environment variables..."
+
+# Use environment variables or fall back to defaults
+CONTACTS_CRON="${CONTACTS_SCHEDULE:-0 8 * * *}"
+TASKS_CRON="${TASKS_SCHEDULE:-0 */6 * * *}"
+
+# Generate crontab file
+cat > /etc/cron.d/calendar-engine << EOF
+# Calendar Engine Cron Schedule (Auto-generated from Environment Variables)
+# Contacts sync schedule: $CONTACTS_CRON
+$CONTACTS_CRON root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
+# Tasks sync schedule: $TASKS_CRON
+$TASKS_CRON root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
 
 EOF
-        if [ -n "$CONTACTS_SCHEDULE" ]; then
-            echo "${CONTACTS_SCHEDULE} root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1" >> /etc/cron.d/calendar-engine
-            echo "  Contacts schedule: ${CONTACTS_SCHEDULE}"
-        fi
-        
-        if [ -n "$TASKS_SCHEDULE" ]; then
-            echo "${TASKS_SCHEDULE} root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1" >> /etc/cron.d/calendar-engine
-            echo "  Tasks schedule: ${TASKS_SCHEDULE}"
-        fi
-        
-        # Add empty line at the end
-        echo "" >> /etc/cron.d/calendar-engine
-        chmod 0644 /etc/cron.d/calendar-engine
-    fi
-else
-    echo "WARNING: No crontab file found at /etc/cron.d/calendar-engine"
-    echo "Creating default crontab..."
-    cat > /etc/cron.d/calendar-engine << 'EOF'
-# Calendar Engine Default Cron Schedule
-# Contacts: daily at 8:00 AM
-0 8 * * * root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
-# Tasks: every 6 hours
-0 */6 * * * root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
 
-EOF
-    chmod 0644 /etc/cron.d/calendar-engine
-fi
+# Set proper permissions
+chmod 0644 /etc/cron.d/calendar-engine
 
+echo "Crontab configured:"
+echo "  Contacts: $CONTACTS_CRON"
+echo "  Tasks: $TASKS_CRON"
 echo "=========================================="
-echo "Crontab configuration:"
+echo "Full crontab configuration:"
 cat /etc/cron.d/calendar-engine
 echo "=========================================="
 
