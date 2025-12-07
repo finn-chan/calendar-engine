@@ -78,15 +78,23 @@ docker-compose down
 
 ### Environment Variables
 
-You can override cron schedules using environment variables in `docker-compose.yml`:
+You can configure cron schedules and behavior using environment variables in `docker-compose.yml`:
 
 ```yaml
 environment:
   - TZ=America/New_York                 # Timezone
+  - CONFIG_PATH=/config/config.yaml     # Config file path (auto-set)
   - CONTACTS_SCHEDULE=0 8 * * *         # Contacts sync schedule
   - TASKS_SCHEDULE=0 */6 * * *          # Tasks sync schedule
-  - SYNC_ON_START=true                  # Run sync on container start
+  - SYNC_ON_START=true                  # Run sync on container start (default: true)
 ```
+
+**Recommended approach:** Use environment variables in `docker-compose.yml` for schedule configuration. This is simpler than managing a separate crontab file.
+
+**SYNC_ON_START behavior:**
+- `true` (default): Runs a full sync when container starts
+- `false`: Only runs scheduled syncs via cron
+- Useful for immediate results on first deployment
 
 ### Volume Mounts
 

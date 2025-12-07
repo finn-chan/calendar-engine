@@ -89,7 +89,7 @@ docker-compose up -d
 # View logs
 docker-compose logs -f
 
-# One-time sync
+# One-time sync (if SYNC_ON_START=false)
 docker-compose run --rm calendar-engine once
 ```
 

@@ -64,8 +64,8 @@ if [ "$1" = "once" ]; then
     exit 0
 fi
 
-# Run initial sync on container start
-if [ "${SYNC_ON_START:-true}" != "false" ]; then
+# Run initial sync on container start (default: true)
+if [ "${SYNC_ON_START:-true}" = "true" ]; then
     echo "Running initial synchronization..."
     cd /app && python -m app || echo "Initial sync failed (this is normal on first run before OAuth)"
     echo "=========================================="
@@ -75,13 +75,17 @@ fi
 echo "Starting cron daemon..."
 cron
 
-# Verify cron is running
+# Verify cron is running (non-fatal check)
 sleep 2
-if ps aux | grep -q '[c]ron'; then
-    echo "Cron daemon started successfully"
+if command -v ps >/dev/null 2>&1; then
+    if ps aux | grep -q '[c]ron'; then
+        echo "Cron daemon started successfully"
+    else
+        echo "WARNING: Cron daemon may not be running"
+    fi
 else
-    echo "ERROR: Cron daemon failed to start"
-    exit 1
+    echo "WARNING: 'ps' command not available, skipping cron verification"
+    echo "Assuming cron started successfully..."
 fi
 
 # Keep container running and tail logs

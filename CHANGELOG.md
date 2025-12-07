@@ -30,9 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Logging Configuration**: Updated log file path in sample configuration
   - Changed from `/data/app.log` to `/logs/app.log`
 - **Docker Configuration**: Enhanced Docker setup for better directory management
-  - `Dockerfile`: Added `/logs` directory creation
+  - `Dockerfile`: Added `/logs` directory creation and `procps` package for monitoring
   - `docker-compose.yml`: Added `./logs:/logs` volume mount
   - `docker-entrypoint.sh`: Creates all necessary directories on startup
+- **Default Behavior**: `SYNC_ON_START` now defaults to `true`
+  - Container runs initial sync on startup by default
+  - Can be disabled by setting `SYNC_ON_START=false`
+- **Schedule Configuration**: Environment variables are now the recommended method
+  - Simpler than managing separate crontab file
+  - `CONTACTS_SCHEDULE` and `TASKS_SCHEDULE` in docker-compose.yml
 
 ### Fixed
 - **Cron Configuration**: Added missing `CONFIG_PATH` environment variable to static `crontab` file
@@ -42,6 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Directory Creation**: Ensured all required directories are created on container startup
   - `docker-entrypoint.sh` now creates `/config`, `/data`, `/logs`, `/var/log/cron`
   - Prevents "directory not found" errors
+- **Missing ps Command**: Added `procps` package to Dockerfile
+  - Fixes "ps: command not found" error during cron verification
+  - Prevents container restart loop
+- **Cron Verification**: Made cron daemon check non-fatal
+  - Container continues even if ps command unavailable
+  - Logs warning instead of exiting on verification failure
 
 ### Security
 - **Improved Security Model**: Clear separation of public and private files

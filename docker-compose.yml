@@ -25,12 +25,19 @@ services:
       # Python unbuffered output
       - PYTHONUNBUFFERED=1
 
+      # Run sync on container start (default: true)
+      # Set to false to disable initial sync
+      # - SYNC_ON_START=false
+
       # Sync schedule (can be overridden here)
       # Format: minute hour day month weekday
       # Examples:
       #   0 */6 * * *    = Every 6 hours
       #   0 8,20 * * *   = Daily at 8:00 and 20:00
       #   */30 * * * *   = Every 30 minutes
+      # Default schedules if not specified:
+      #   Contacts: 0 8 * * * (daily at 8:00 AM)
+      #   Tasks: 0 */6 * * * (every 6 hours)
       - CONTACTS_SCHEDULE=0 8 * * *
       - TASKS_SCHEDULE=0 */6 * * *
 
