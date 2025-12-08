@@ -28,7 +28,7 @@ def sample_config():
             },
         },
         "sync": {
-            "timezone": "America/New_York",
+            "timezone": "UTC",
             "contacts": {"years_past": 5, "years_future": 5},
             "tasks": {
                 "include_completed": True,
@@ -121,7 +121,7 @@ def test_default_values(config_file):
         # Test defaults
         assert config.contacts_enabled is True  # Default
         assert config.tasks_enabled is True  # Default
-        assert config.timezone == "America/New_York"  # Default
+        assert config.timezone == "UTC"  # Default
     finally:
         os.unlink(temp_path)
 

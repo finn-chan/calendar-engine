@@ -36,7 +36,7 @@ class ContactsConverter:
         """Initialize ICS converter.
 
         Args:
-            timezone: Target timezone (e.g., 'America/New_York')
+            timezone: Target timezone (e.g., 'UTC', 'Asia/Shanghai', 'America/New_York')
             calendar_name: Calendar name for X-WR-CALNAME
             apple_language: Language code for Apple Calendar
             apple_region: Region code for Apple Calendar

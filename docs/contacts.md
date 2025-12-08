@@ -45,7 +45,7 @@ Configure event generation range:
 
 ```yaml
 sync:
-  timezone: America/New_York
+  timezone: UTC  # Use your local timezone (e.g., Asia/Shanghai, America/New_York)
   contacts:
     years_past: 5      # Generate events for past 5 years
     years_future: 5    # Generate events for next 5 years
@@ -312,7 +312,7 @@ Set appropriate timezone in config:
 
 ```yaml
 sync:
-  timezone: America/New_York    # Your local timezone
+  timezone: UTC  # Your local timezone (e.g., Asia/Shanghai, America/New_York, Europe/London)
 ```
 
 ### Performance Optimization
@@ -361,7 +361,7 @@ google_api:
     enabled: true
 
 sync:
-  timezone: America/New_York
+  timezone: UTC  # Your local timezone
   contacts:
     years_past: 10
     years_future: 10

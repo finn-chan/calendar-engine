@@ -81,8 +81,8 @@ Configure schedules and behavior in `docker-compose.yml`:
 
 ```yaml
 environment:
-  # Timezone setting
-  - TZ=America/New_York
+  # Timezone setting (use your local timezone)
+  - TZ=UTC
   
   # Sync schedules (cron format: minute hour day month weekday)
   - CONTACTS_SCHEDULE=0 8 * * *      # Daily at 8:00 AM (default)

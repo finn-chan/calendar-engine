@@ -167,7 +167,7 @@ class Config:
     @property
     def timezone(self) -> str:
         """Get timezone for ICS conversion."""
-        return self._config.get("sync", {}).get("timezone", "America/New_York")
+        return self._config.get("sync", {}).get("timezone", "UTC")
 
     # =========================================================================
     # Contacts ICS Output Configuration

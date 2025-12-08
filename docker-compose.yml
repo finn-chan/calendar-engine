@@ -16,8 +16,8 @@ services:
       # Logs directory
       - ./logs:/logs
     environment:
-      # Timezone setting
-      - TZ=America/New_York
+      # Timezone setting (use your local timezone, e.g., Asia/Shanghai, America/New_York, Europe/London)
+      - TZ=UTC
       # Configuration file path
       - CONFIG_PATH=/config/config.yaml
       # Python unbuffered output

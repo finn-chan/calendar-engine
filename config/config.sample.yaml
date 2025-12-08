@@ -19,7 +19,9 @@ google_api:
       - https://www.googleapis.com/auth/tasks.readonly
 
 sync:
-  timezone: America/New_York   # Timezone for all calendar events
+  # Timezone for calendar events and logging
+  # Use IANA timezone database names (e.g., Asia/Shanghai, America/New_York, Europe/London, UTC)
+  timezone: UTC
   
   # Google Contacts synchronization settings
   contacts:
