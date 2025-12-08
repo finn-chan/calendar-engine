@@ -8,6 +8,13 @@ echo "Time: $(date)"
 echo "Timezone: ${TZ:-UTC}"
 echo "=========================================="
 
+# Set timezone from environment variable
+if [ -n "$TZ" ]; then
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
+    echo $TZ > /etc/timezone
+    echo "Timezone set to: $TZ"
+fi
+
 # Create necessary directories
 mkdir -p /config /data /logs /var/log/cron
 

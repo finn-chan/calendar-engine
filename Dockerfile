@@ -37,10 +37,9 @@ RUN mkdir -p /config /data /logs /var/log/cron
 # Set environment variables
 ENV CONFIG_PATH=/config/config.yaml
 ENV PYTHONUNBUFFERED=1
-ENV TZ=America/New_York
 
-# Set timezone
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Install tzdata for timezone support (timezone will be set via docker-compose environment variable)
+# Do not hardcode timezone in Dockerfile to allow users to customize via TZ environment variable
 
 # Run the entrypoint script
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
