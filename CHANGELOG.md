@@ -5,6 +5,55 @@ All notable changes to Calendar Engine will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-09
+
+### Added
+- **Unified Retry Mechanism**: Intelligent error handling with exponential backoff
+  - Added `tenacity` library for comprehensive retry logic
+  - **Retries ALL errors**: Network timeouts, connection failures, API errors, rate limits
+  - Exponential backoff strategy: 4s → 8s → 16s → 32s → 60s between retries
+  - Configurable retry attempts, wait times, and backoff multiplier
+- **Extended HTTP Timeout**: Increased default timeout to 120 seconds
+  - Handles slow network conditions and large contact lists
+  - Prevents premature timeout errors
+- **Configurable Retry Settings**: New configuration options in `config.yaml`
+  ```yaml
+  google_api:
+    retry:
+      max_attempts: 5              # Maximum retry attempts (applies to all errors)
+      max_wait_seconds: 60         # Maximum wait between retries
+      min_wait_seconds: 4          # Initial wait between retries
+      multiplier: 2                # Exponential backoff multiplier
+    timeout:
+      http_timeout_seconds: 120    # HTTP request timeout
+  ```
+- **Enhanced Logging**: Detailed retry attempt logging
+  - Shows retry attempt number and total attempts
+  - Logs the specific error that triggered the retry
+  - Reports final success or failure after all retries
+
+### Changed
+- **API Client Architecture**: Refactored for unified resilience
+  - Single retry mechanism handles all error types (no separate layers)
+  - All timeout and retry parameters fully configurable
+  - No hardcoded values or retry limits
+  - Maintains backward compatibility with sensible defaults
+
+### Fixed
+- **Network Timeout Issues**: Resolved frequent `TimeoutError: timed out` failures
+  - Previously failed immediately after single timeout
+  - Now retries with exponential backoff for up to 5 attempts
+  - Automatically recovers from temporary network issues
+- **API Error Recovery**: Improved handling of transient API failures
+  - Retries rate limit errors (429), server errors (500/503), and all exceptions
+  - Exponential backoff prevents overwhelming the API during issues
+- **Connection Stability**: Enhanced reliability for unstable networks
+  - Retries all error types: `TimeoutError`, `ConnectionError`, `OSError`, `HttpError`
+  - Better handling of intermittent connectivity issues
+
+### Dependencies
+- Added `tenacity>=8.2.0` for retry logic
+
 ## [1.1.1] - 2025-12-08
 
 ### Changed

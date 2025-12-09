@@ -33,6 +33,9 @@ A unified Python application that synchronizes Google services (Contacts, Tasks)
 
 ### Common Features
 - ✅ Unified configuration system with service-specific settings
+- ✅ Unified retry mechanism with exponential backoff for all errors
+- ✅ Automatic error recovery for network failures, API rate limits, and timeouts
+- ✅ Configurable HTTP timeout and retry parameters
 - ✅ Customizable reminder system with notification times
 - ✅ Full timezone conversion support
 - ✅ Docker containerization with cron scheduling
@@ -277,7 +280,7 @@ ics:
     emoji:
       completed: "✔️"
       incomplete: "⭕️"
-      overdue: "⚠️"           # Shown on today's reminder for overdue tasks
+      overdue: "⚠️"                 # Shown on today's reminder for overdue tasks
 ```
 
 ### Recurring Tasks
@@ -287,6 +290,30 @@ Tasks with these patterns in title or notes are treated as recurring:
 - Weekly: "every week", "weekly", "every 2 weeks"
 - Monthly: "every month", "monthly"
 - Yearly: "every year", "yearly", "annually"
+
+### Retry & Timeout Configuration
+
+Configure automatic retry behavior for handling transient errors:
+
+```yaml
+google_api:
+  retry:
+    max_attempts: 5            # Maximum retry attempts (including initial try)
+    min_wait_seconds: 4        # Initial wait time before first retry
+    max_wait_seconds: 60       # Maximum wait time between retries
+    multiplier: 2              # Exponential backoff multiplier (4s→8s→16s→32s→60s)
+  timeout:
+    http_timeout_seconds: 120  # HTTP request timeout
+```
+
+The retry mechanism uses exponential backoff and automatically retries all types of errors:
+- Network connectivity issues
+- Google API rate limits (HTTP 429)
+- Server errors (HTTP 5xx)
+- Timeout errors
+- Other transient failures
+
+For detailed information, see [Retry Configuration Guide](docs/retry-configuration.md).
 
 ## Project Structure
 
@@ -359,6 +386,38 @@ mypy app/
 ```
 
 ## Troubleshooting
+
+### Network Timeout & API Errors
+
+The application includes automatic retry with exponential backoff for transient errors:
+
+**Symptoms:**
+- Log shows "TimeoutError: timed out" or "ConnectionError"
+- Intermittent sync failures during specific times
+- "Rate limit exceeded" or HTTP 429 errors
+
+**Automatic Handling:**
+- Network errors are automatically retried up to 5 times (configurable)
+- Wait time increases exponentially: 4s → 8s → 16s → 32s → 60s
+- All error types are retried (network, timeout, rate limits, server errors)
+
+**Manual Actions:**
+- Check logs for retry attempts: `grep "Retry attempt" logs/app.log`
+- Adjust retry parameters in `config/config.yaml` if needed
+- Increase `http_timeout_seconds` for slow networks (default: 120s)
+- Reduce `max_attempts` if you want faster failures
+
+**Configuration Example:**
+```yaml
+google_api:
+  retry:
+    max_attempts: 5            # Increase for unreliable networks
+    max_wait_seconds: 60       # Increase for severe rate limiting
+  timeout:
+    http_timeout_seconds: 180  # Increase for slow connections
+```
+
+See [Retry Configuration Guide](docs/retry-configuration.md) for detailed troubleshooting.
 
 ### Authentication Issues
 - Ensure `credentials.json` is in the `config/` directory

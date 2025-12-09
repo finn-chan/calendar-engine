@@ -69,11 +69,16 @@ def sync_contacts(config: Config) -> bool:
             credentials_file=config.credentials_file,
             token_file=config.contacts_token_file,
             scopes=config.contacts_scopes,
+            http_timeout=config.api_http_timeout_seconds,
         )
 
         # Fetch all contacts
         logger.info("Fetching contacts from Google People API")
-        contacts = client.get_all_contacts()
+        contacts = client.get_all_contacts(
+            max_attempts=config.api_retry_max_attempts,
+            min_wait=config.api_retry_min_wait_seconds,
+            max_wait=config.api_retry_max_wait_seconds,
+        )
 
         # Convert to ICS
         logger.info("Converting contacts to ICS format")
@@ -143,12 +148,17 @@ def sync_tasks(config: Config) -> bool:
             credentials_file=config.credentials_file,
             token_file=config.tasks_token_file,
             scopes=config.tasks_scopes,
+            http_timeout=config.api_http_timeout_seconds,
         )
 
         # Fetch all tasks
         logger.info("Fetching tasks from Google Tasks API")
         all_tasks = client.get_all_tasks(
-            show_completed=config.tasks_include_completed, show_hidden=True
+            show_completed=config.tasks_include_completed,
+            show_hidden=True,
+            max_attempts=config.api_retry_max_attempts,
+            min_wait=config.api_retry_min_wait_seconds,
+            max_wait=config.api_retry_max_wait_seconds,
         )
 
         # Convert to ICS

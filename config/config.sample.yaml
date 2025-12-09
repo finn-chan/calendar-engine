@@ -4,6 +4,17 @@
 google_api:
   credentials_file: /config/credentials.json
   
+  # Retry all errors (network, API, timeout) with exponential backoff
+  retry:
+    max_attempts: 5              # Maximum number of retry attempts
+    max_wait_seconds: 60         # Maximum wait time between retries in seconds
+    min_wait_seconds: 4          # Initial wait time between retries in seconds
+    multiplier: 2                # Exponential backoff multiplier
+                                 # Wait sequence: 4s → 8s → 16s → 32s → 60s (capped at max)
+  
+  timeout:
+    http_timeout_seconds: 120    # HTTP request timeout in seconds
+  
   # Google Contacts API configuration
   contacts:
     enabled: true

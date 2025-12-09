@@ -51,6 +51,45 @@ class Config:
             "credentials_file", "/config/credentials.json"
         )
 
+    @property
+    def api_retry_max_attempts(self) -> int:
+        """Get maximum number of retry attempts for API calls."""
+        return (
+            self._config.get("google_api", {}).get("retry", {}).get("max_attempts", 5)
+        )
+
+    @property
+    def api_retry_max_wait_seconds(self) -> int:
+        """Get maximum wait time between retries in seconds."""
+        return (
+            self._config.get("google_api", {})
+            .get("retry", {})
+            .get("max_wait_seconds", 60)
+        )
+
+    @property
+    def api_retry_min_wait_seconds(self) -> int:
+        """Get minimum wait time between retries in seconds."""
+        return (
+            self._config.get("google_api", {})
+            .get("retry", {})
+            .get("min_wait_seconds", 4)
+        )
+
+    @property
+    def api_retry_multiplier(self) -> int:
+        """Get exponential backoff multiplier for retries."""
+        return self._config.get("google_api", {}).get("retry", {}).get("multiplier", 2)
+
+    @property
+    def api_http_timeout_seconds(self) -> int:
+        """Get HTTP request timeout in seconds."""
+        return (
+            self._config.get("google_api", {})
+            .get("timeout", {})
+            .get("http_timeout_seconds", 120)
+        )
+
     # =========================================================================
     # Contacts API Configuration
     # =========================================================================

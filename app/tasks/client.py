@@ -1,9 +1,16 @@
 """Google Tasks API client."""
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
+import httplib2
 from googleapiclient.discovery import build
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from app.common.auth import GoogleAuthenticator
 
@@ -13,17 +20,25 @@ logger = logging.getLogger(__name__)
 class TasksClient:
     """Client for interacting with Google Tasks API."""
 
-    def __init__(self, credentials_file: str, token_file: str, scopes: List[str]):
+    def __init__(
+        self,
+        credentials_file: str,
+        token_file: str,
+        scopes: List[str],
+        http_timeout: int = 120,
+    ):
         """Initialize Google Tasks client.
 
         Args:
             credentials_file: Path to OAuth2 credentials JSON file
             token_file: Path to token storage file
             scopes: List of OAuth2 scopes to request
+            http_timeout: HTTP request timeout in seconds
         """
         self.credentials_file = credentials_file
         self.token_file = token_file
         self.scopes = scopes
+        self.http_timeout = http_timeout
         self.service = None
         self._authenticate()
 
@@ -34,9 +49,18 @@ class TasksClient:
         )
         creds = authenticator.authenticate()
 
-        # Build the service
-        self.service = build("tasks", "v1", credentials=creds)
-        logger.info("Successfully authenticated with Google Tasks API")
+        # Build the service with timeout configuration
+        http = httplib2.Http(timeout=self.http_timeout)
+        self.service = build(
+            "tasks",
+            "v1",
+            credentials=creds,
+            http=http,
+        )
+        logger.info(
+            f"Successfully authenticated with Google Tasks API "
+            f"(timeout={self.http_timeout}s)"
+        )
 
     def get_task_lists(self) -> List[Dict[str, Any]]:
         """Get all task lists.
@@ -94,17 +118,40 @@ class TasksClient:
         return tasks
 
     def get_all_tasks(
-        self, show_completed: bool = True, show_hidden: bool = True
+        self,
+        show_completed: bool = True,
+        show_hidden: bool = True,
+        max_attempts: Optional[int] = None,
+        min_wait: Optional[int] = None,
+        max_wait: Optional[int] = None,
     ) -> Dict[str, Dict[str, Any]]:
         """Get all tasks from all task lists.
 
         Args:
             show_completed: Whether to include completed tasks
             show_hidden: Whether to include hidden tasks
+            max_attempts: Maximum retry attempts (overrides default)
+            min_wait: Minimum wait seconds between retries (overrides default)
+            max_wait: Maximum wait seconds between retries (overrides default)
 
         Returns:
             Dictionary mapping task list ID to task list info and tasks
         """
+        # Apply retry decorator dynamically if parameters provided
+        if max_attempts or min_wait or max_wait:
+            return self._get_all_tasks_with_retry(
+                show_completed,
+                show_hidden,
+                max_attempts or 5,
+                min_wait or 4,
+                max_wait or 60,
+            )
+        return self._fetch_all_tasks(show_completed, show_hidden)
+
+    def _fetch_all_tasks(
+        self, show_completed: bool, show_hidden: bool
+    ) -> Dict[str, Dict[str, Any]]:
+        """Internal method to fetch all tasks."""
         all_tasks = {}
         task_lists = self.get_task_lists()
 
@@ -121,3 +168,43 @@ class TasksClient:
         logger.info(f"Total tasks fetched: {total_tasks}")
 
         return all_tasks
+
+    def _get_all_tasks_with_retry(
+        self,
+        show_completed: bool,
+        show_hidden: bool,
+        max_attempts: int,
+        min_wait: int,
+        max_wait: int,
+    ) -> Dict[str, Dict[str, Any]]:
+        """Fetch tasks with custom retry configuration.
+
+        Args:
+            show_completed: Whether to include completed tasks
+            show_hidden: Whether to include hidden tasks
+            max_attempts: Maximum number of retry attempts
+            min_wait: Minimum wait seconds between retries
+            max_wait: Maximum wait seconds between retries
+
+        Returns:
+            Dictionary mapping task list ID to task list info and tasks
+        """
+        logger.info(
+            f"Using custom retry config: max_attempts={max_attempts}, "
+            f"min_wait={min_wait}s, max_wait={max_wait}s"
+        )
+
+        @retry(
+            retry=retry_if_exception_type(Exception),
+            stop=stop_after_attempt(max_attempts),
+            wait=wait_exponential(multiplier=1, min=min_wait, max=max_wait),
+            reraise=True,
+            before_sleep=lambda retry_state: logger.warning(
+                f"Retry attempt {retry_state.attempt_number}/{max_attempts} "
+                f"after error: {retry_state.outcome.exception()}"
+            ),
+        )
+        def _fetch_with_retry():
+            return self._fetch_all_tasks(show_completed, show_hidden)
+
+        return _fetch_with_retry()
