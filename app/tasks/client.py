@@ -3,6 +3,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 
+import google_auth_httplib2
 import httplib2
 from googleapiclient.discovery import build
 from tenacity import (
@@ -49,13 +50,15 @@ class TasksClient:
         )
         creds = authenticator.authenticate()
 
-        # Build the service with timeout configuration
+        # Configure HTTP client with timeout and authorize with credentials
         http = httplib2.Http(timeout=self.http_timeout)
+        authorized_http = google_auth_httplib2.AuthorizedHttp(creds, http=http)
+
+        # Build the service with authorized HTTP client
         self.service = build(
             "tasks",
             "v1",
-            credentials=creds,
-            http=http,
+            http=authorized_http,
         )
         logger.info(
             f"Successfully authenticated with Google Tasks API "
