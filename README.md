@@ -1,6 +1,6 @@
 # Calendar Engine
 
-A unified Python application that synchronizes Google services (Contacts, Tasks) into iCalendar (ICS) format, enabling seamless calendar subscription across mainstream calendar applications.
+A unified Python application that synchronizes various calendar sources (Google Contacts, Google Tasks, Holidays) into iCalendar (ICS) format, enabling seamless calendar subscription across mainstream calendar applications.
 
 ## Features
 
@@ -31,6 +31,15 @@ A unified Python application that synchronizes Google services (Contacts, Tasks)
 - ✅ Automatically generate multiple instances for recurring tasks
 - ✅ Parent-child task relationship support
 
+### Holidays
+- ✅ Download China holiday data from Apple iCloud
+- ✅ Automatic classification into statutory holidays and traditional festivals
+- ✅ Generate two separate calendars (cn_zh_hol.ics, cn_zh_fest.ics)
+- ✅ Configurable reminder system for different holiday types
+- ✅ Historical data preservation by reading existing output files
+- ✅ Smart summary formatting (清明 → 清明节, parentheses standardization)
+- ✅ No authentication required (public data source)
+
 ### Common Features
 - ✅ Unified configuration system with service-specific settings
 - ✅ Unified retry mechanism with exponential backoff for all errors
@@ -45,7 +54,7 @@ A unified Python application that synchronizes Google services (Contacts, Tasks)
 
 ## Quick Start
 
-### 1. Prepare Google API Credentials
+### 1. Prepare Google API Credentials (For Contacts and Tasks Only)
 
 1. Visit [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select an existing one
@@ -54,6 +63,8 @@ A unified Python application that synchronizes Google services (Contacts, Tasks)
    - **Google Tasks API** (for Tasks)
 4. Create OAuth 2.0 Client ID (Application type: Desktop app)
 5. Download the credentials file and save it as `config/credentials.json`
+
+**Note**: Holidays synchronization does not require Google API credentials as it uses a public data source from Apple iCloud.
 
 ### 2. Prepare Configuration File
 
@@ -64,7 +75,8 @@ cp config/config.sample.yaml config/config.yaml
 ```
 
 Key configuration sections:
-- **google_api**: Enable/disable services and configure API credentials
+- **google_api**: Enable/disable Google services and configure API credentials
+- **holidays**: Enable/disable holidays sync and configure data source
 - **sync**: Synchronization behavior and timezone settings
 - **ics**: Calendar output paths, names, and formatting options
 - **logging**: Logging level and output file
@@ -168,6 +180,9 @@ python -m app --only contacts
 # Sync only tasks
 python -m app --only tasks
 
+# Sync only holidays
+python -m app --only holidays
+
 # Use custom config file
 python -m app --config /path/to/config.yaml
 
@@ -241,6 +256,10 @@ google_api:
     enabled: true  # Set to false to disable Contacts sync
   tasks:
     enabled: true  # Set to false to disable Tasks sync
+
+holidays:
+  china:
+    enabled: true  # Set to false to disable Holidays sync
 ```
 
 ### Contacts Configuration
@@ -291,6 +310,30 @@ Tasks with these patterns in title or notes are treated as recurring:
 - Monthly: "every month", "monthly"
 - Yearly: "every year", "yearly", "annually"
 
+### Holidays Configuration
+
+Configure holiday synchronization and reminders:
+
+```yaml
+holidays:
+  china:
+    enabled: true
+    preserve_history: true     # Preserve historical events from existing ICS files
+
+ics:
+  holidays:
+    reminders:
+      holiday:                 # Statutory holidays
+        - "-3 09:00"           # 3 days before at 09:00
+        - "-15 09:00"          # 15 days before at 09:00
+      festival:                # Traditional festivals
+        - "09:00"              # Same day at 09:00
+```
+
+**Options:**
+- `preserve_history: true` (default): Merge with existing ICS files to preserve historical events
+- `preserve_history: false`: Only use latest data from source (useful for clean start)
+
 ### Retry & Timeout Configuration
 
 Configure automatic retry behavior for handling transient errors:
@@ -334,10 +377,13 @@ calendar-engine/
 │   ├── contacts/             # Contacts module
 │   │   ├── client.py         # Google People API client
 │   │   └── converter.py      # ICS converter for contacts
-│   └── tasks/                # Tasks module
-│       ├── client.py         # Google Tasks API client
-│       ├── converter.py      # ICS converter for tasks
-│       └── recurrence.py     # Recurring task parser
+│   ├── tasks/                # Tasks module
+│   │   ├── client.py         # Google Tasks API client
+│   │   ├── converter.py      # ICS converter for tasks
+│   │   └── recurrence.py     # Recurring task parser
+│   └── holidays/             # Holidays module
+│       ├── client.py         # Holidays download and parsing client
+│       └── converter.py      # ICS converter for holidays
 ├── config/
 │   ├── config.sample.yaml    # Sample configuration
 │   ├── config.yaml           # User configuration (gitignored)
@@ -505,4 +551,6 @@ Special thanks to all contributors of the original projects.
 - [Configuration Guide](docs/README.md)
 - [Contacts Features](docs/contacts.md)
 - [Tasks Features](docs/tasks.md)
+- [Holidays Guide](docs/holidays.md)
+- [Retry Configuration](docs/retry-configuration.md)
 - [Requirements](docs/requirements.md)

@@ -15,7 +15,7 @@ def create_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(
         prog="calendar-engine",
-        description="Unified Google Calendar synchronization tool for Contacts and Tasks",
+        description="Unified Calendar synchronization tool for Google Contacts, Tasks, and Holidays",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -27,6 +27,9 @@ Examples:
 
   # Sync only tasks
   python -m app --only tasks
+
+  # Sync only holidays
+  python -m app --only holidays
 
   # Use custom config file
   python -m app --config /path/to/config.yaml
@@ -47,7 +50,7 @@ Examples:
     parser.add_argument(
         "--only",
         type=str,
-        choices=["contacts", "tasks"],
+        choices=["contacts", "tasks", "holidays"],
         help="Sync only specific service (default: sync all enabled services)",
         metavar="SERVICE",
     )

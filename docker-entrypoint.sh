@@ -24,6 +24,7 @@ echo "Configuring cron schedules from environment variables..."
 # Use environment variables or fall back to defaults
 CONTACTS_CRON="${CONTACTS_SCHEDULE:-0 8 * * *}"
 TASKS_CRON="${TASKS_SCHEDULE:-0 */6 * * *}"
+HOLIDAYS_CRON="${HOLIDAYS_SCHEDULE:-0 6 * * *}"
 
 # Generate crontab file
 cat > /etc/cron.d/calendar-engine << EOF
@@ -32,6 +33,8 @@ cat > /etc/cron.d/calendar-engine << EOF
 $CONTACTS_CRON root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
 # Tasks sync schedule: $TASKS_CRON
 $TASKS_CRON root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
+# Holidays sync schedule: $HOLIDAYS_CRON
+$HOLIDAYS_CRON root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only holidays >> /var/log/cron/holidays.log 2>&1
 
 EOF
 
@@ -41,6 +44,7 @@ chmod 0644 /etc/cron.d/calendar-engine
 echo "Crontab configured:"
 echo "  Contacts: $CONTACTS_CRON"
 echo "  Tasks: $TASKS_CRON"
+echo "  Holidays: $HOLIDAYS_CRON"
 echo "=========================================="
 echo "Full crontab configuration:"
 cat /etc/cron.d/calendar-engine
@@ -84,7 +88,7 @@ echo "Container is ready. Tailing log files..."
 echo "=========================================="
 
 # Create log files if they don't exist
-touch /var/log/cron/contacts.log /var/log/cron/tasks.log /var/log/cron/full-sync.log
+touch /var/log/cron/contacts.log /var/log/cron/tasks.log /var/log/cron/holidays.log /var/log/cron/full-sync.log
 
 # Tail all cron logs
 tail -f /var/log/cron/*.log

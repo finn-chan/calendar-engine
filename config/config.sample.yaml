@@ -47,6 +47,15 @@ sync:
     repeat_past_instances_days: 30       # Days to look back for recurring task instances
     repeat_future_instances: 10          # Number of future instances for recurring tasks
 
+holidays:
+  # China holidays configuration
+  china:
+    enabled: true
+    source: icloud                       # Data source: icloud
+    preserve_history: true               # Preserve historical events by reading existing ICS files
+    icloud:
+      url: https://calendars.icloud.com/holidays/cn_zh.ics
+
 ics:
   # Google Contacts calendar output configuration
   contacts:
@@ -102,6 +111,24 @@ ics:
     reminders:
       - "09:00"
       - "19:00"
+  
+  # Holidays calendar output configuration
+  holidays:
+    enabled: true
+    holiday_output_path: /data/cn_zh_hol.ics     # Statutory holidays and workdays
+    festival_output_path: /data/cn_zh_fest.ics   # Traditional festivals
+    holiday_calendar_name: "China Holidays"
+    festival_calendar_name: "China Festivals"
+    
+    # Reminder settings for different holiday types
+    # Time format: "HH:MM" for same-day reminders
+    # For multi-day advance reminders: "-N HH:MM" (N days before at specified time)
+    reminders:
+      holiday:                           # Statutory holidays and workdays
+        - "-3 09:00"                     # 3 days before at 09:00
+        - "-15 09:00"                    # 15 days before at 09:00
+      festival:                          # Traditional festivals
+        - "09:00"                        # Same day at 09:00
   
   # Common calendar settings
   common:

@@ -450,6 +450,97 @@ class Config:
         )
 
     # =========================================================================
+    # Holidays Configuration
+    # =========================================================================
+
+    @property
+    def holidays_enabled(self) -> bool:
+        """Check if Holidays sync is enabled."""
+        return self._config.get("holidays", {}).get("china", {}).get("enabled", True)
+
+    @property
+    def holidays_preserve_history(self) -> bool:
+        """Check if historical holiday data should be preserved."""
+        return (
+            self._config.get("holidays", {})
+            .get("china", {})
+            .get("preserve_history", True)
+        )
+
+    @property
+    def holidays_source_url(self) -> str:
+        """Get holidays source URL from iCloud."""
+        return (
+            self._config.get("holidays", {})
+            .get("china", {})
+            .get("icloud", {})
+            .get("url", "https://calendars.icloud.com/holidays/cn_zh.ics")
+        )
+
+    # Holidays ICS Configuration
+
+    @property
+    def holidays_ics_enabled(self) -> bool:
+        """Check if holidays ICS output is enabled."""
+        return self._config.get("ics", {}).get("holidays", {}).get("enabled", True)
+
+    @property
+    def holidays_output_path(self) -> str:
+        """Get holidays ICS output path (statutory holidays)."""
+        return (
+            self._config.get("ics", {})
+            .get("holidays", {})
+            .get("holiday_output_path", "/data/cn_zh_hol.ics")
+        )
+
+    @property
+    def festivals_output_path(self) -> str:
+        """Get festivals ICS output path (traditional festivals)."""
+        return (
+            self._config.get("ics", {})
+            .get("holidays", {})
+            .get("festival_output_path", "/data/cn_zh_fest.ics")
+        )
+
+    @property
+    def holiday_calendar_name(self) -> str:
+        """Get holiday calendar name."""
+        return (
+            self._config.get("ics", {})
+            .get("holidays", {})
+            .get("holiday_calendar_name", "中国法定假日")
+        )
+
+    @property
+    def festival_calendar_name(self) -> str:
+        """Get festival calendar name."""
+        return (
+            self._config.get("ics", {})
+            .get("holidays", {})
+            .get("festival_calendar_name", "中国传统节日")
+        )
+
+    @property
+    def holiday_reminders(self) -> List[str]:
+        """Get reminder times for statutory holidays."""
+        return (
+            self._config.get("ics", {})
+            .get("holidays", {})
+            .get("reminders", {})
+            .get("holiday", ["-2 09:00", "-14 09:00"])
+        )
+
+    @property
+    def festival_reminders(self) -> List[str]:
+        """Get reminder times for traditional festivals."""
+        return (
+            self._config.get("ics", {})
+            .get("holidays", {})
+            .get("reminders", {})
+            .get("festival", ["09:00"])
+        )
+
+    # =========================================================================
     # Logging Configuration
     # =========================================================================
 

@@ -5,6 +5,31 @@ All notable changes to Calendar Engine will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-12-10
+
+### Added
+- **Holidays Synchronization**: New module to download and sync Chinese holidays from Apple iCloud
+  - Automatic classification into statutory holidays (cn_zh_hol.ics) and traditional festivals (cn_zh_fest.ics)
+  - Fully configurable reminder system for different holiday types
+  - Optional historical data preservation by reading existing output ICS files
+  - Smart summary formatting (e.g., 清明 → 清明节, parentheses standardization)
+  - Configurable source URL and history preservation option
+  - CLI support: `--only holidays` parameter
+  - Comprehensive documentation in docs/holidays.md
+
+### Changed
+- Extended configuration system with `holidays.china` and `ics.holidays` sections
+- Updated CLI description to include holidays service
+- Enhanced main sync logic to support holidays workflow
+
+### Technical
+- New modules: `app/holidays/client.py` and `app/holidays/converter.py`
+- Uses existing httplib2 for HTTP requests (no new dependencies)
+- Implements event deduplication using (date, summary) key
+- History preservation: reads existing ICS files instead of separate cache
+- Configurable reminders via `ics.holidays.reminders` config
+- Integrated with unified retry mechanism from v1.2.0
+
 ## [1.2.0] - 2025-12-09
 
 ### Added

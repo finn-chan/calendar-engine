@@ -10,6 +10,8 @@ from app.cli import parse_args, validate_args
 from app.config import Config
 from app.contacts.client import ContactsClient
 from app.contacts.converter import ContactsConverter
+from app.holidays.client import HolidaysClient
+from app.holidays.converter import HolidaysConverter
 from app.tasks.client import TasksClient
 from app.tasks.converter import TasksConverter
 
@@ -196,6 +198,79 @@ def sync_tasks(config: Config) -> bool:
         return False
 
 
+def sync_holidays(config: Config) -> bool:
+    """Synchronize Holidays to ICS files.
+
+    Args:
+        config: Configuration object
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger = logging.getLogger(__name__)
+
+    if not config.holidays_enabled:
+        logger.info("Holidays sync is disabled in configuration")
+        return True
+
+    if not config.holidays_ics_enabled:
+        logger.info("Holidays ICS output is disabled in configuration")
+        return True
+
+    try:
+        logger.info("=" * 60)
+        logger.info("Starting Holidays synchronization")
+        logger.info("=" * 60)
+
+        # Initialize Holidays client
+        logger.info("Initializing Holidays client")
+        client = HolidaysClient(
+            source_url=config.holidays_source_url,
+            http_timeout=config.api_http_timeout_seconds,
+            holiday_output_path=config.holidays_output_path,
+            festival_output_path=config.festivals_output_path,
+            preserve_history=config.holidays_preserve_history,
+        )
+
+        # Fetch and merge all holiday events
+        logger.info("Fetching holidays from source")
+        events = client.get_all_events()
+
+        if not events:
+            logger.warning("No holiday events found")
+            return True
+
+        # Initialize converter
+        logger.info("Initializing Holidays converter")
+        converter = HolidaysConverter(
+            holiday_output_path=config.holidays_output_path,
+            festival_output_path=config.festivals_output_path,
+            holiday_reminders=config.holiday_reminders,
+            festival_reminders=config.festival_reminders,
+            holiday_calendar_name=config.holiday_calendar_name,
+            festival_calendar_name=config.festival_calendar_name,
+        )
+
+        # Convert and save to ICS files
+        logger.info("Converting and saving holidays to ICS files")
+        converter.convert_and_save(events)
+
+        # Print summary
+        converter.print_summary(events)
+
+        logger.info("=" * 60)
+        logger.info("Holidays synchronization completed successfully")
+        logger.info("=" * 60)
+
+        return True
+
+    except Exception as e:
+        logger.error("=" * 60)
+        logger.error(f"Holidays synchronization failed: {e}", exc_info=True)
+        logger.error("=" * 60)
+        return False
+
+
 def main() -> int:
     """Main entry point for Calendar Engine.
 
@@ -229,6 +304,7 @@ def main() -> int:
         sync_all = args.only is None
         sync_contacts_flag = sync_all or args.only == "contacts"
         sync_tasks_flag = sync_all or args.only == "tasks"
+        sync_holidays_flag = sync_all or args.only == "holidays"
 
         success = True
 
@@ -241,6 +317,11 @@ def main() -> int:
         if sync_tasks_flag:
             tasks_success = sync_tasks(config)
             success = success and tasks_success
+
+        # Sync holidays if requested
+        if sync_holidays_flag:
+            holidays_success = sync_holidays(config)
+            success = success and holidays_success
 
         if success:
             logger.info("=" * 60)

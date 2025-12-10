@@ -36,8 +36,10 @@ services:
       # If not specified, defaults are:
       #   Contacts: 0 8 * * * (daily at 8:00 AM)
       #   Tasks: 0 */6 * * * (every 6 hours)
+      #   Holidays: 0 6 * * * (daily at 6:00 AM)
       - CONTACTS_SCHEDULE=0 8 * * *
       - TASKS_SCHEDULE=0 */6 * * *
+      - HOLIDAYS_SCHEDULE=0 6 * * *
 
     healthcheck:
       test: [ "CMD", "test", "-f", "/data/tasks.ics", "-o", "-f", "/data/contacts.ics" ]
