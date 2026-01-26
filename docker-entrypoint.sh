@@ -25,25 +25,25 @@ echo "Configuring cron schedules from environment variables..."
 CONTACTS_CRON="${CONTACTS_SCHEDULE:-0 8 * * *}"
 TASKS_CRON="${TASKS_SCHEDULE:-0 */6 * * *}"
 
-# Generate crontab file
-cat > /etc/cron.d/calendar-engine << EOF
+# Generate crontab file for Alpine dcron (use /etc/crontabs/root, no username column)
+cat > /etc/crontabs/root << EOF
 # Calendar Engine Cron Schedule (Auto-generated from Environment Variables)
 # Contacts sync schedule: $CONTACTS_CRON
-$CONTACTS_CRON root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
+$CONTACTS_CRON cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
 # Tasks sync schedule: $TASKS_CRON
-$TASKS_CRON root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
+$TASKS_CRON cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
 
 EOF
 
 # Set proper permissions
-chmod 0644 /etc/cron.d/calendar-engine
+chmod 0600 /etc/crontabs/root
 
 echo "Crontab configured:"
 echo "  Contacts: $CONTACTS_CRON"
 echo "  Tasks: $TASKS_CRON"
 echo "=========================================="
 echo "Full crontab configuration:"
-cat /etc/cron.d/calendar-engine
+cat /etc/crontabs/root
 echo "=========================================="
 
 # Check if running in one-shot mode
