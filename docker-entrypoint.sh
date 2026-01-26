@@ -79,12 +79,12 @@ else
     echo "Assuming cron started successfully..."
 fi
 
-# Keep container running and tail logs
-echo "Container is ready. Tailing log files..."
+# Keep container running
+echo "Container is ready."
 echo "=========================================="
 
 # Create log files if they don't exist
 touch /var/log/cron/contacts.log /var/log/cron/tasks.log /var/log/cron/full-sync.log
 
-# Tail all cron logs
-tail -f /var/log/cron/*.log
+# Keep container alive
+sleep infinity
