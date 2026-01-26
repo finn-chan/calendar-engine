@@ -1,0 +1,19 @@
+# Python dependencies for Calendar Engine
+
+# Google API libraries
+google-api-python-client>=2.100.0
+google-auth-httplib2>=0.1.1
+google-auth-oauthlib>=1.1.0
+
+# iCalendar generation
+icalendar>=5.0.0
+pytz>=2023.3
+
+# Configuration and utilities
+PyYAML>=6.0
+
+# Retry and resilience
+tenacity>=8.2.0
+
+# Contacts-specific: Lunar calendar conversion
+lunarcalendar>=0.0.9

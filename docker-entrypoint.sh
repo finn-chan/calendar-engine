@@ -64,19 +64,14 @@ fi
 
 # Start cron daemon
 echo "Starting cron daemon..."
-cron
+crond -f -l 2 &
 
 # Verify cron is running (non-fatal check)
 sleep 2
-if command -v ps >/dev/null 2>&1; then
-    if ps aux | grep -q '[c]ron'; then
-        echo "Cron daemon started successfully"
-    else
-        echo "WARNING: Cron daemon may not be running"
-    fi
+if pgrep crond >/dev/null 2>&1 || pgrep cron >/dev/null 2>&1; then
+    echo "Cron daemon started successfully"
 else
-    echo "WARNING: 'ps' command not available, skipping cron verification"
-    echo "Assuming cron started successfully..."
+    echo "WARNING: Cron daemon may not be running"
 fi
 
 # Keep container running
