@@ -38,8 +38,12 @@ htmlcov/
 # Documentation (exclude from image, include sample config)
 README.md
 CHANGELOG.md
+QUICKSTART.md
 LICENSE
 docs/
+
+# Development dependencies
+requirements.txt
 
 # OS files
 .DS_Store
@@ -49,9 +53,10 @@ desktop.ini
 # Project-specific (keep samples only, actual configs mounted as volumes)
 config/config.yaml
 config/credentials.json
+config/token_*.json
 data/
+logs/
 *.ics
-*.json
 *.log
 
 # Docker files (not needed in image)

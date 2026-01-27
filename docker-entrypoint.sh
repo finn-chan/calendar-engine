@@ -27,19 +27,19 @@ TASKS_CRON="${TASKS_SCHEDULE:-0 */6 * * *}"
 HOLIDAYS_CRON="${HOLIDAYS_SCHEDULE:-0 6 * * *}"
 
 # Generate crontab file
-cat > /etc/cron.d/calendar-engine << EOF
+cat > /etc/crontabs/root << EOF
 # Calendar Engine Cron Schedule (Auto-generated from Environment Variables)
 # Contacts sync schedule: $CONTACTS_CRON
-$CONTACTS_CRON root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
+$CONTACTS_CRON cd /app && CONFIG_PATH=/config/config.yaml python -m app --only contacts >> /var/log/cron/contacts.log 2>&1
 # Tasks sync schedule: $TASKS_CRON
-$TASKS_CRON root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
+$TASKS_CRON cd /app && CONFIG_PATH=/config/config.yaml python -m app --only tasks >> /var/log/cron/tasks.log 2>&1
 # Holidays sync schedule: $HOLIDAYS_CRON
-$HOLIDAYS_CRON root cd /app && CONFIG_PATH=/config/config.yaml python -m app --only holidays >> /var/log/cron/holidays.log 2>&1
+$HOLIDAYS_CRON cd /app && CONFIG_PATH=/config/config.yaml python -m app --only holidays >> /var/log/cron/holidays.log 2>&1
 
 EOF
 
 # Set proper permissions
-chmod 0644 /etc/cron.d/calendar-engine
+chmod 0600 /etc/crontabs/root
 
 echo "Crontab configured:"
 echo "  Contacts: $CONTACTS_CRON"
@@ -47,7 +47,7 @@ echo "  Tasks: $TASKS_CRON"
 echo "  Holidays: $HOLIDAYS_CRON"
 echo "=========================================="
 echo "Full crontab configuration:"
-cat /etc/cron.d/calendar-engine
+cat /etc/crontabs/root
 echo "=========================================="
 
 # Check if running in one-shot mode
@@ -59,7 +59,7 @@ if [ "$1" = "once" ]; then
     exit 0
 fi
 
-# Run initial sync on container start (default: true)
+# Run initial sync on container start
 if [ "${SYNC_ON_START:-true}" = "true" ]; then
     echo "Running initial synchronization..."
     cd /app && python -m app || echo "Initial sync failed (this is normal on first run before OAuth)"
@@ -68,26 +68,21 @@ fi
 
 # Start cron daemon
 echo "Starting cron daemon..."
-cron
+crond -f -l 2 &
 
-# Verify cron is running (non-fatal check)
+# Verify cron is running
 sleep 2
-if command -v ps >/dev/null 2>&1; then
-    if ps aux | grep -q '[c]ron'; then
-        echo "Cron daemon started successfully"
-    else
-        echo "WARNING: Cron daemon may not be running"
-    fi
+if pgrep crond >/dev/null 2>&1 || pgrep cron >/dev/null 2>&1; then
+    echo "Cron daemon started successfully"
 else
-    echo "WARNING: 'ps' command not available, skipping cron verification"
-    echo "Assuming cron started successfully..."
+    echo "WARNING: Cron daemon may not be running"
 fi
 
 # Keep container running
 echo "Container is ready."
 echo "=========================================="
 
-# Create log files if they don't exist
+# Create log files
 touch /var/log/cron/contacts.log /var/log/cron/tasks.log /var/log/cron/holidays.log /var/log/cron/full-sync.log
 
 # Keep container alive
