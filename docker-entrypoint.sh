@@ -25,7 +25,7 @@ echo "Configuring cron schedules from environment variables..."
 CONTACTS_CRON="${CONTACTS_SCHEDULE:-0 8 * * *}"
 TASKS_CRON="${TASKS_SCHEDULE:-0 */6 * * *}"
 
-# Generate crontab file for Alpine dcron (use /etc/crontabs/root, no username column)
+# Generate crontab file
 cat > /etc/crontabs/root << EOF
 # Calendar Engine Cron Schedule (Auto-generated from Environment Variables)
 # Contacts sync schedule: $CONTACTS_CRON
@@ -55,7 +55,7 @@ if [ "$1" = "once" ]; then
     exit 0
 fi
 
-# Run initial sync on container start (default: true)
+# Run initial sync on container start
 if [ "${SYNC_ON_START:-true}" = "true" ]; then
     echo "Running initial synchronization..."
     cd /app && python -m app || echo "Initial sync failed (this is normal on first run before OAuth)"
@@ -66,7 +66,7 @@ fi
 echo "Starting cron daemon..."
 crond -f -l 2 &
 
-# Verify cron is running (non-fatal check)
+# Verify cron is running
 sleep 2
 if pgrep crond >/dev/null 2>&1 || pgrep cron >/dev/null 2>&1; then
     echo "Cron daemon started successfully"
@@ -78,7 +78,7 @@ fi
 echo "Container is ready."
 echo "=========================================="
 
-# Create log files if they don't exist
+# Create log files
 touch /var/log/cron/contacts.log /var/log/cron/tasks.log /var/log/cron/full-sync.log
 
 # Keep container alive
